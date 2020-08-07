@@ -14,9 +14,13 @@ import android.view.ViewGroup;
 import com.example.musicapp.adapter.ItemClickListener;
 import com.example.musicapp.adapter.ItemLibraryAdapter;
 import com.example.musicapp.object.ItemLibrary;
+import com.example.musicapp.object.PlayListLocal;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 
 /**
@@ -39,6 +43,9 @@ public class LibraryFragment extends Fragment implements ItemClickListener {
 
     private View view;
     private RecyclerView rvLibraryItem;
+
+    private Realm realm;
+    private RealmResults<PlayListLocal> realmResults;
 
     public LibraryFragment() {
         // Required empty public constructor
@@ -83,14 +90,25 @@ public class LibraryFragment extends Fragment implements ItemClickListener {
 
     private void ConnectView() {
         rvLibraryItem = view.findViewById(R.id.rv_libraryitem);
+        Realm.init(getActivity());
+        realm = Realm.getDefaultInstance();
     }
 
     private void AddLibraryItem() {
+
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realmResults = realm.where(PlayListLocal.class).findAll();
+            }
+        });
+        int playlistCounter = realmResults.size();
+
         libraries = new ArrayList<>();
         ItemLibrary itemPlaylist = new ItemLibrary(
                 R.drawable.ic_playlist_play_black_24dp,
                 "Playlist",
-                "11",
+                String.valueOf(playlistCounter),
                 "playlist");
         ItemLibrary itemDownLoad = new ItemLibrary(
                 R.drawable.ic_cloud_download_black_24dp,
@@ -113,6 +131,8 @@ public class LibraryFragment extends Fragment implements ItemClickListener {
         ItemLibrary item = libraries.get(position);
         if(item.getItemId().equals("playlist")) {
             Navigation.findNavController(v).navigate(R.id.action_libraryFragment_to_localPlaylistFragment);
+        } else if(item.getItemId().equals("download")) {
+            Navigation.findNavController(v).navigate(R.id.action_libraryFragment_to_localMusicFragment);
         }
     }
 }

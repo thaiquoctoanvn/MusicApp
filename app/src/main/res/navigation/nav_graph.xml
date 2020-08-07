@@ -43,6 +43,9 @@
         <action
             android:id="@+id/action_libraryFragment_to_localListSongFragment"
             app:destination="@id/localListSongFragment" />
+        <action
+            android:id="@+id/action_libraryFragment_to_localMusicFragment"
+            app:destination="@id/localMusicFragment" />
     </fragment>
     <fragment
         android:id="@+id/lovedSongFragment"
@@ -121,5 +124,14 @@
         <action
             android:id="@+id/action_localListSongFragment_to_localPlaylistFragment"
             app:destination="@id/localPlaylistFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/localMusicFragment"
+        android:name="com.example.musicapp.LocalMusicFragment"
+        android:label="fragment_local_music"
+        tools:layout="@layout/fragment_local_music" >
+        <action
+            android:id="@+id/action_localMusicFragment_to_libraryFragment"
+            app:destination="@id/libraryFragment" />
     </fragment>
 </navigation>

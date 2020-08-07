@@ -70,6 +70,11 @@
                                 <LayoutPositions />
                               </value>
                             </entry>
+                            <entry key="action_libraryFragment_to_localListSongFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
                             <entry key="action_libraryFragment_to_localPlaylistFragment">
                               <value>
                                 <LayoutPositions />
@@ -120,6 +125,32 @@
                             <option name="y" value="605" />
                           </Point>
                         </option>
+                        <option name="myPositions">
+                          <map>
+                            <entry key="action_localListSongFragment_to_libraryFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                            <entry key="action_localListSongFragment_to_localPlaylistFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                          </map>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
+                  <entry key="localMusicFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="9" />
+                            <option name="y" value="694" />
+                          </Point>
+                        </option>
                       </LayoutPositions>
                     </value>
                   </entry>
@@ -135,6 +166,11 @@
                         <option name="myPositions">
                           <map>
                             <entry key="action_localPlaylistFragment_to_libraryFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                            <entry key="action_localPlaylistFragment_to_localListSongFragment">
                               <value>
                                 <LayoutPositions />
                               </value>
