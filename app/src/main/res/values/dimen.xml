@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="level1">8dp</dimen>
+    <dimen name="level2">16dp</dimen>
+    <dimen name="level3">32dp</dimen>
+    <dimen name="level4">40dp</dimen>
+    <dimen name="level5">48dp</dimen>
+    <dimen name="level6">56dp</dimen>
+    <dimen name="iconHeightLevel1">40dp</dimen>
+    <dimen name="iconWidthLevel1">40dp</dimen>
+    <dimen name="iconHeightLevel2">48dp</dimen>
+    <dimen name="iconWidthLevel2">48dp</dimen>
+    <dimen name="iconHeightLevel3">56dp</dimen>
+    <dimen name="iconWidthLevel3">56dp</dimen>
+    <dimen name="iconHeightLevel4">64dp</dimen>
+    <dimen name="iconWidthLevel4">64dp</dimen>
+    <dimen name="iconHeightLevel3_5">60dp</dimen>
+    <dimen name="iconWidthLevel3_5">60dp</dimen>
+</resources>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        app:cardElevation="0dp"
+        app:cardCornerRadius="@dimen/level1"
+        android:id="@+id/cv1">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/iv_backgroundbanner"
+            android:scaleType="fitXY"
+            android:elevation="6dp"/>
+<!--        <View-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:background="@drawable/custom_gradient_background"-->
+<!--            />-->
+    </androidx.cardview.widget.CardView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/cv1"
+        android:id="@+id/layout_content"
+        android:layout_marginRight="@dimen/level2"
+        android:layout_marginLeft="@dimen/level2"
+        android:layout_marginBottom="@dimen/level2">
+        <androidx.cardview.widget.CardView
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            app:cardElevation="0dp"
+            app:cardCornerRadius="@dimen/level1"
+            android:id="@+id/cv2">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@mipmap/ic_launcher"
+                android:id="@+id/iv_iconbanner"
+                android:scaleType="fitXY"
+                android:background="@color/white"/>
+        </androidx.cardview.widget.CardView>
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:layout_toRightOf="@id/cv2"
+            android:layout_marginRight="@dimen/level2"
+            android:layout_marginLeft="@dimen/level2">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Wish You Were Here"
+                style="@style/textSizeLevel2"
+                android:id="@+id/tv_bannertitle"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_bannertitle"
+                android:id="@+id/tv_bannercontent"
+                style="@style/textSizeLevel1"
+                android:text="Phiêu theo giọng ca đầy mê hoặc của Avril Lavigne"
+                android:maxLines="2"
+                android:textColor="@color/white"
+                android:ellipsize="end"/>
+        </RelativeLayout>
+
+    </RelativeLayout>
+</RelativeLayout>

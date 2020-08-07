@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginBottom="@dimen/level2">
+    <androidx.cardview.widget.CardView
+        android:layout_width="@dimen/iconWidthLevel4"
+        android:layout_height="@dimen/iconHeightLevel4"
+        app:cardCornerRadius="@dimen/level1"
+        android:background="@color/white"
+        android:id="@+id/cv_itemlocalplaylist"
+        android:layout_centerVertical="true">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_add_black_24dp"
+            android:scaleType="fitXY"
+            android:background="@color/colorBackground"
+            android:id="@+id/iv_localplaylistimage"
+            android:layout_gravity="center"/>
+    </androidx.cardview.widget.CardView>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tên playlist"
+        style="@style/textSizeLevel2"
+        android:layout_toRightOf="@id/cv_itemlocalplaylist"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/level2"
+        android:id="@+id/tv_localplaylistname"/>
+</RelativeLayout>

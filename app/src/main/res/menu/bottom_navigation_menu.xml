@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!--id của fragment phải trùng với id tưogn ứng của item menu-->
+    <item
+        android:icon="@drawable/ic_home_black_24dp"
+        android:id="@+id/homeFragment"
+        app:showAsAction="always"
+        android:title="Trang chủ"
+        android:orderInCategory="1"/>
+    <item
+        android:icon="@drawable/ic_search_black_24dp"
+        android:id="@+id/searchFragment"
+        app:showAsAction="always"
+        android:title="Tìm kiếm"
+        android:orderInCategory="2"/>
+    <item
+        android:icon="@drawable/ic_favorite_black_24dp"
+        android:id="@+id/lovedSongFragment"
+        app:showAsAction="always"
+        android:title="Yêu thích"
+        android:orderInCategory="3"/>
+    <item
+        android:id="@+id/libraryFragment"
+        android:icon="@drawable/ic_library_music_black_24dp"
+        android:title="Thư viện"
+        app:showAsAction="always"
+        android:orderInCategory="4"/>
+</menu>

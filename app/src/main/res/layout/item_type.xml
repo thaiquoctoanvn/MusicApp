@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginRight="@dimen/level2">
+    <androidx.cardview.widget.CardView
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:id="@+id/cv"
+        app:cardElevation="0dp"
+        app:cardCornerRadius="@dimen/level1">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@mipmap/ic_launcher"
+            android:id="@+id/iv_typeicon"
+            android:scaleType="fitXY"
+            android:background="@color/white"/>
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cv"
+        android:text="Super Boom 2019"
+        android:maxLines="2"
+        style="@style/textSizeLevel1"
+        android:layout_marginTop="@dimen/level1"
+        android:ellipsize="end"
+        android:id="@+id/tv_typename"
+        android:textColor="@color/black"/>
+</RelativeLayout>

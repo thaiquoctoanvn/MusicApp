@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/textSizeLevel2"
+        android:text="Thêm playlist"
+        android:id="@+id/tv_dialogtitle"
+        android:textColor="@color/colorForeground"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/level2"
+        android:textStyle="bold"/>
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Nhập tên playlist"
+        android:background="@drawable/round_corner"
+        android:layout_below="@id/tv_dialogtitle"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/level3"
+        android:id="@+id/et_localplaylistname"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/et_localplaylistname"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="@dimen/level2"
+        android:layout_marginBottom="@dimen/level2">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/round_corner"
+            android:text="Thêm ảnh"
+            android:textColor="@color/colorForeground"
+            android:id="@+id/btn_add"
+            android:layout_toRightOf="@id/btn_cancel"
+            android:layout_marginLeft="@dimen/level2"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hủy"
+            android:background="@drawable/round_corner"
+            android:id="@+id/btn_cancel"/>
+    </RelativeLayout>
+</RelativeLayout>

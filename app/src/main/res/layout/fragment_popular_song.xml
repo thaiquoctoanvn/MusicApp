@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:context=".AlbumFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <ProgressBar
+        android:id="@+id/progressbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:max="100"
+        android:layout_centerVertical="true"
+        android:indeterminateTint="@color/colorForeground"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/layout_popularsongtitlefragment"
+        android:gravity="center_vertical"
+        android:layout_marginRight="@dimen/level2"
+        android:layout_marginLeft="@dimen/level2">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bài hát hot"
+            style="@style/textSizeLevel2"
+            android:id="@+id/tv_populartitle"
+            android:layout_centerVertical="true"
+            android:textColor="@color/black"
+            android:textStyle="bold"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Xem thêm"
+            style="@style/textSizeLevel1"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:id="@+id/tv_morepopularsong"
+            android:textColor="@color/colorForeground"/>
+    </RelativeLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/rv_popularsong"
+        android:layout_below="@id/layout_popularsongtitlefragment"
+        android:layout_marginTop="@dimen/level2"
+        android:scrollbars="none"
+        android:paddingLeft="@dimen/level2"
+        android:paddingRight="@dimen/level2"
+        android:layout_marginBottom="@dimen/level1"
+        android:nestedScrollingEnabled="false">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+</RelativeLayout>

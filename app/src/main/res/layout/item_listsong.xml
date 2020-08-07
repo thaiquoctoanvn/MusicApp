@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginBottom="@dimen/level2">
+    <androidx.cardview.widget.CardView
+        android:layout_width="@dimen/iconWidthLevel3_5"
+        android:layout_height="@dimen/iconHeightLevel3_5"
+        app:cardElevation="0dp"
+        app:cardCornerRadius="@dimen/level1"
+        android:id="@+id/cv3"
+        android:layout_centerVertical="true">
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@mipmap/ic_launcher"
+            android:id="@+id/iv_listsongitemimage"
+            android:scaleType="fitXY"
+            android:background="@color/white"/>
+    </androidx.cardview.widget.CardView>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/cv3"
+        android:gravity="center_vertical"
+        android:layout_marginLeft="@dimen/level2"
+        android:layout_centerVertical="true">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rain On Me"
+            style="@style/textSizeLevel2"
+            android:textColor="@color/black"
+            android:id="@+id/tv_listsongitemname"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/textSizeLevel1"
+            android:text="Lady Gaga @ Ariana Grande"
+            android:layout_below="@id/tv_listsongitemname"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:id="@+id/tv_listsongitemsinger"/>
+    </RelativeLayout>
+</RelativeLayout>

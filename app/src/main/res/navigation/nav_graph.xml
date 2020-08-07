@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+    <!--id của fragment phải trùng với id tưogn ứng của item menu-->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.musicapp.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_searchFragment2"
+            app:destination="@id/searchFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_libraryFragment2"
+            app:destination="@id/libraryFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_lovedSongFragment2"
+            app:destination="@id/lovedSongFragment" />
+        <action
+            android:id="@+id/action_homeFragment_self"
+            app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_settingFragment"
+            app:destination="@id/settingFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_listSongFragment"
+            app:destination="@id/listSongFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/libraryFragment"
+        android:name="com.example.musicapp.LibraryFragment"
+        android:label="fragment_library"
+        tools:layout="@layout/fragment_library" >
+        <action
+            android:id="@+id/action_libraryFragment_to_homeFragment2"
+            app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_libraryFragment_to_localPlaylistFragment"
+            app:destination="@id/localPlaylistFragment" />
+        <action
+            android:id="@+id/action_libraryFragment_to_localListSongFragment"
+            app:destination="@id/localListSongFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/lovedSongFragment"
+        android:name="com.example.musicapp.LovedSongFragment"
+        android:label="fragment_loved_song"
+        tools:layout="@layout/fragment_loved_song" >
+        <action
+            android:id="@+id/action_lovedSongFragment_to_homeFragment2"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.musicapp.SearchFragment"
+        android:label="fragment_search"
+        tools:layout="@layout/fragment_search" >
+        <action
+            android:id="@+id/action_searchFragment_to_homeFragment2"
+            app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_searchFragment_to_listSongFragment"
+            app:destination="@id/listSongFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingFragment"
+        android:name="com.example.musicapp.SettingFragment"
+        android:label="fragment_setting"
+        tools:layout="@layout/fragment_setting" >
+        <action
+            android:id="@+id/action_settingFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/listSongFragment"
+        android:name="com.example.musicapp.ListSongFragment"
+        android:label="fragment_list_song"
+        tools:layout="@layout/fragment_list_song" >
+        <action
+            android:id="@+id/action_listSongFragment_to_homeFragment"
+            app:destination="@id/homeFragment" />
+        <action
+            android:id="@+id/action_listSongFragment_to_searchResultFragment"
+            app:destination="@id/searchResultFragment" />
+        <action
+            android:id="@+id/action_listSongFragment_to_searchFragment"
+            app:destination="@id/searchFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchResultFragment"
+        android:name="com.example.musicapp.SearchResultFragment"
+        android:label="fragment_search_result"
+        tools:layout="@layout/fragment_search_result" >
+        <action
+            android:id="@+id/action_searchResultFragment_to_listSongFragment"
+            app:destination="@id/listSongFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/localPlaylistFragment"
+        android:name="com.example.musicapp.LocalPlaylistFragment"
+        android:label="fragment_local_playlist"
+        tools:layout="@layout/fragment_local_playlist" >
+        <action
+            android:id="@+id/action_localPlaylistFragment_to_libraryFragment"
+            app:destination="@id/libraryFragment" />
+        <action
+            android:id="@+id/action_localPlaylistFragment_to_localListSongFragment"
+            app:destination="@id/localListSongFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/localListSongFragment"
+        android:name="com.example.musicapp.LocalListSongFragment"
+        android:label="fragment_local_list_song"
+        tools:layout="@layout/fragment_local_list_song" >
+        <action
+            android:id="@+id/action_localListSongFragment_to_libraryFragment"
+            app:destination="@id/libraryFragment" />
+        <action
+            android:id="@+id/action_localListSongFragment_to_localPlaylistFragment"
+            app:destination="@id/localPlaylistFragment" />
+    </fragment>
+</navigation>
