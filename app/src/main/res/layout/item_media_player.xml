@@ -13,7 +13,8 @@
         app:behavior_peekHeight="64dp"
         android:id="@+id/relative_layout_bottom_sheet"
         android:clickable="true"
-        android:background="@drawable/round_corner">
+        android:background="@drawable/round_corner"
+        >
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

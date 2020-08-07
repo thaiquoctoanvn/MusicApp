@@ -56,6 +56,7 @@ public class PlayListFragment extends Fragment {
     private RecyclerView rvPlayList;
     private ProgressBar progressBar;
     private PlayListAdapter playListAdapter;
+    private Thread thread;
 
     private ArrayList<PlayList> arrPlaylist;
     private ArrayList<Song> arrListSong;
@@ -113,7 +114,13 @@ public class PlayListFragment extends Fragment {
             UpdateUI(vmSaveHomeState.getPlayList().getValue());
 //            Log.e("bbb", "Load from playlist viewmodel");
         } else {
-            GetPlayListData();
+            thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    GetPlayListData();
+                }
+            });
+            thread.start();
         }
 
         return view;
@@ -151,10 +158,14 @@ public class PlayListFragment extends Fragment {
     }
 
     private void UpdateUI(final ArrayList<PlayList> arrayList) {
+        if(thread != null && !thread.isInterrupted()) {
+            thread.interrupt();
+        }
         playListAdapter = new PlayListAdapter(arrayList);
         rvPlayList.setAdapter(playListAdapter);
         rvPlayList.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
         progressBar.setVisibility(View.GONE);
+
         playListAdapter.setOnItemListener(new PlayListAdapter.recyclerviewItemListener() {
             @Override
             public void onItemListener(View view, int position) {

@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ArrayList<Song> playingList;
     private int i = 0;
+    private Thread thread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void ReadyPlayMusic() {
+
         playingList = new ArrayList<>();
         vmMusicToMiniPlayer = new ViewModelProvider(MainActivity.this).get(VMMusicToMiniPlayer.class);
         vmMusicToMiniPlayer.getMusicFromBanner().observe(MainActivity.this, new Observer<Banner>() {
@@ -199,7 +201,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onChanged(ArrayList<Song> songs) {
                 UpdateMusicPlayer(songs.get(0).getSongImage(), songs.get(0).getSongName(), songs.get(0).getSongSingerName());
                 PlayMedia(songs.get(0).getSongLink());
-
                 playingList = songs;
                 playingListAdapter = new PlayingListAdapter(playingList);
                 rvPlayingList.setAdapter(playingListAdapter);
@@ -227,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvMainSongSinger.setText(songSingerName);
     }
 
-    private void PlayMedia(String songLink) {
+    private void PlayMedia(final String songLink) {
         if(mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
         } else if(mediaPlayer.isPlaying()) {
@@ -238,16 +239,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mediaPlayer.setDataSource(songLink);
             mediaPlayer.prepare();
             mediaPlayer.start();
-            tvFinishedTime.setText(MilliSecondToTime(mediaPlayer.getDuration()));
-            ibtnPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
-            ibtnMiniPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
-            sbSongLength.setMax(mediaPlayer.getDuration() / 1000);
-            SetUpSeekBar();
-
         } catch (IOException e) {
             e.printStackTrace();
-            Log.e("###", e.getMessage());
         }
+        tvFinishedTime.setText(MilliSecondToTime(mediaPlayer.getDuration()));
+        ibtnPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
+        ibtnMiniPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
+        sbSongLength.setMax(mediaPlayer.getDuration() / 1000);
+        SetUpSeekBar();
 
         sbSongLength.setOnTouchListener(MainActivity.this);
         sbSongLength.setOnSeekBarChangeListener(MainActivity.this);

@@ -59,6 +59,7 @@ public class AlbumFragment extends Fragment {
 
     private VMSaveHomeState vmSaveHomeState;
     private VMLoadListSong vmLoadListSong;
+    private Thread thread;
 
     public AlbumFragment() {
         // Required empty public constructor
@@ -109,7 +110,13 @@ public class AlbumFragment extends Fragment {
         if(vmSaveHomeState.getAlbum().getValue() != null) {
             UpdateUI(vmSaveHomeState.getAlbum().getValue());
         } else {
-            GetAlbumData();
+            thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    GetAlbumData();
+                }
+            });
+            thread.start();
         }
         return view;
     }
@@ -142,6 +149,9 @@ public class AlbumFragment extends Fragment {
     }
 
     private void UpdateUI(final ArrayList<Album> arrayList) {
+        if(thread != null && !thread.isInterrupted()) {
+            thread.interrupt();
+        }
         adapterAlbum = new AlbumAdapter(arrayList);
         rvAlbum.setAdapter(adapterAlbum);
         rvAlbum.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));

@@ -58,6 +58,7 @@ public class BannerFragment extends Fragment {
     private Handler handler;
     private int currentItem;
     private ProgressBar progressBar;
+    private Thread thread;
 
     private ArrayList<Banner> arrBanner;
 
@@ -116,7 +117,13 @@ public class BannerFragment extends Fragment {
             UpdateUI(vmSaveHomeState.getBanner().getValue());
             Log.e("###","Load banner from viewmodel");
         } else {
-            GetDataBanner();
+            thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    GetDataBanner();
+                }
+            });
+            thread.start();
             Log.e("###","Load banner from server");
         }
 
@@ -159,7 +166,9 @@ public class BannerFragment extends Fragment {
         });
     }
     private void UpdateUI(final ArrayList<Banner> arr) {
-
+        if(thread != null && !thread.isInterrupted()) {
+            thread.interrupt();
+        }
         bannerAdapterUpgrade = new BannerAdapterUpgrade(arr);
         viewPager.setAdapter(bannerAdapterUpgrade);
         bannerAdapterUpgrade.setOnItemClickListener(new BannerAdapterUpgrade.OnItemBannerClickListener() {
@@ -219,6 +228,7 @@ public class BannerFragment extends Fragment {
         //Số lượng indicator sẽ bằng với số lượng hàm getCount của bannerAdapter
         circleIndicator3.setViewPager(viewPager);
         progressBar.setVisibility(View.GONE);
+
         //Handler dùng kết hợp cùng runable, thực hiện hành động trong runable với thời gian delay
         handler = new Handler();
         runnable = new Runnable() {
