@@ -4,10 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SearchResultFragment">
+    tools:context=".SearchResultFragment"
+    android:id="@+id/layout_searchresult">
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:id="@+id/tv_nothing"
         android:text="Không có kết quả"
         style="@style/textSizeLevel2"
@@ -57,15 +58,14 @@
             android:paddingLeft="@dimen/level2"
             android:paddingRight="@dimen/level2"
             android:layout_marginBottom="@dimen/level1"
-            android:nestedScrollingEnabled="false"
-            android:fitsSystemWindows="true">
+            android:nestedScrollingEnabled="false">
 
         </androidx.recyclerview.widget.RecyclerView>
     </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_below="@id/layout_resultsong"
         android:id="@+id/layout_resultalbum"
         android:visibility="gone">

@@ -1,5 +1,6 @@
 package com.example.musicapp;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -19,7 +20,9 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 
 import com.example.musicapp.adapter.RecentKeySearchAdapter;
 import com.example.musicapp.object.Album;
@@ -41,13 +44,15 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
+
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link SearchFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SearchFragment extends Fragment implements TextWatcher {
+public class SearchFragment extends Fragment implements TextWatcher, View.OnClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -64,6 +69,7 @@ public class SearchFragment extends Fragment implements TextWatcher {
     private EditText etSearch;
     private RecyclerView rvRecentSearch;
     private RecentKeySearchAdapter recentKeySearchAdapter;
+    private RelativeLayout layoutSearch;
 
     private VMSaveSearchState vmSaveSearchState;
 
@@ -127,6 +133,9 @@ public class SearchFragment extends Fragment implements TextWatcher {
     private void ConnectView() {
         etSearch = view.findViewById(R.id.et_search);
         rvRecentSearch = view.findViewById(R.id.rv_recentsearch);
+        rvRecentSearch.setNestedScrollingEnabled(false);
+        layoutSearch = view.findViewById(R.id.layout_search);
+        layoutSearch.setOnClickListener(SearchFragment.this);
 
         Realm.init(getActivity());
         realm = Realm.getDefaultInstance();
@@ -209,5 +218,19 @@ public class SearchFragment extends Fragment implements TextWatcher {
             rvRecentSearch.setVisibility(View.VISIBLE);
         }
         GetResultSearch(s.toString());
+    }
+
+    private void HideKeyBoard() {
+        InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getApplicationWindowToken(), 0);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.layout_search:
+                HideKeyBoard();
+                break;
+        }
     }
 }

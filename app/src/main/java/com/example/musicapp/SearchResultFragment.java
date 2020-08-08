@@ -1,5 +1,7 @@
 package com.example.musicapp;
 
+import android.content.Context;
+import android.hardware.input.InputManager;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -13,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -36,13 +39,15 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
+
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link SearchResultFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SearchResultFragment extends Fragment {
+public class SearchResultFragment extends Fragment implements View.OnClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -60,6 +65,7 @@ public class SearchResultFragment extends Fragment {
     private RecyclerView rvSearchSong, rvSearchAlbum;
     private SearchSongAdapter searchSongAdapter;
     private SearchAlbumAdapter searchAlbumAdapter;
+    private RelativeLayout layoutSearchResult;
 
     private VMSaveSearchState vmSaveSearchState;
     private VMMusicToMiniPlayer vmMusicToMiniPlayer;
@@ -123,6 +129,7 @@ public class SearchResultFragment extends Fragment {
                             tempList.addAll(songs);
                             tempList.remove(position);
                             vmMusicToMiniPlayer.getPlayingList().setValue(tempList);
+                            HideKeyBoard();
                         }
                     });
                 }
@@ -162,6 +169,9 @@ public class SearchResultFragment extends Fragment {
         rvSearchAlbum = view.findViewById(R.id.rv_searchalbum);
         layoutResultSong = view.findViewById(R.id.layout_resultsong);
         layoutResultAlbum = view.findViewById(R.id.layout_resultalbum);
+        layoutSearchResult = view.findViewById(R.id.layout_searchresult);
+
+        layoutSearchResult.setOnClickListener(SearchResultFragment.this);
 
     }
 
@@ -183,5 +193,19 @@ public class SearchResultFragment extends Fragment {
                 Log.e("###", t.getMessage());
             }
         });
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.layout_searchresult:
+                HideKeyBoard();
+                break;
+        }
+    }
+
+    private void HideKeyBoard() {
+        InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getApplicationWindowToken(), 0);
     }
 }

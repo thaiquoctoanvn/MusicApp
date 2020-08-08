@@ -133,6 +133,7 @@ public class PopularSongFragment extends Fragment implements PopularSongAdapter.
         rvPopularSong = view.findViewById(R.id.rv_popularsong);
         tvMoreSong = view.findViewById(R.id.tv_morepopularsong);
         progressBar = view.findViewById(R.id.progressbar);
+        rvPopularSong.setNestedScrollingEnabled(false);
 
         Realm.init(getActivity());
         realm = Realm.getDefaultInstance();

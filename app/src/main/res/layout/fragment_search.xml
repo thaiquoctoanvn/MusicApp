@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SearchFragment"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:id="@+id/layout_search">
 
     <androidx.appcompat.widget.Toolbar
         android:layout_width="match_parent"
@@ -46,7 +47,7 @@
             android:drawableLeft="@drawable/ic_search_black_24dp"/>
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_below="@id/et_search"
             android:layout_marginTop="@dimen/level2"
             android:paddingLeft="@dimen/level2"

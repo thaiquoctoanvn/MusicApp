@@ -103,6 +103,7 @@ public class LibraryFragment extends Fragment implements ItemClickListener {
             }
         });
         int playlistCounter = realmResults.size();
+        int localSongCounter = 0;
 
         libraries = new ArrayList<>();
         ItemLibrary itemPlaylist = new ItemLibrary(
@@ -113,7 +114,7 @@ public class LibraryFragment extends Fragment implements ItemClickListener {
         ItemLibrary itemDownLoad = new ItemLibrary(
                 R.drawable.ic_cloud_download_black_24dp,
                 "Nhạc đã tải",
-                "5",
+                String.valueOf(localSongCounter),
                 "download");
         libraries.add(itemPlaylist);
         libraries.add(itemDownLoad);

@@ -13,7 +13,7 @@
         app:behavior_peekHeight="64dp"
         android:id="@+id/relative_layout_bottom_sheet"
         android:clickable="true"
-        android:background="@drawable/round_corner"
+        android:background="@drawable/round_corner_bottom_sheet"
         >
         <RelativeLayout
             android:layout_width="match_parent"
@@ -26,7 +26,7 @@
                 android:id="@+id/iv_miniicon"
                 android:scaleType="fitXY"
                 android:layout_centerVertical="true"
-                android:background="@color/white"
+                android:background="@color/bottomSheet"
                 android:padding="@dimen/level2"/>
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -68,7 +68,7 @@
                     android:layout_height="@dimen/iconHeightLevel1"
                     android:src="@drawable/ic_play_arrow_black_24dp"
                     android:scaleType="fitXY"
-                    android:background="@color/white"
+                    android:background="@color/bottomSheet"
                     android:id="@+id/ibtn_miniplaypause"
                     android:layout_centerVertical="true"
                     android:layout_marginRight="@dimen/level2"/>
@@ -76,7 +76,7 @@
                     android:layout_width="@dimen/iconWidthLevel1"
                     android:layout_height="@dimen/iconHeightLevel1"
                     android:src="@drawable/ic_skip_next_black_24dp"
-                    android:background="@color/white"
+                    android:background="@color/bottomSheet"
                     android:layout_centerVertical="true"
                     android:id="@+id/ibtn_mininext"
                     android:scaleType="fitXY"
@@ -101,7 +101,7 @@
                         android:layout_width="@dimen/iconWidthLevel1"
                         android:layout_height="@dimen/iconHeightLevel1"
                         android:src="@drawable/ic_expand_more_black_24dp"
-                        android:background="@color/white"
+                        android:background="@color/bottomSheet"
                         android:layout_alignParentTop="true"
                         android:layout_marginLeft="@dimen/level2"
                         android:id="@+id/ibtn_collapse"
@@ -122,7 +122,7 @@
                         android:layout_marginRight="@dimen/level2"
                         android:id="@+id/ibtn_love"
                         android:src="@drawable/ic_favorite_border_black_24dp"
-                        android:background="@color/white"/>
+                        android:background="@color/bottomSheet"/>
                     <androidx.cardview.widget.CardView
                         android:layout_width="300dp"
                         android:layout_height="300dp"
@@ -130,13 +130,13 @@
                         android:layout_below="@id/ibtn_collapse"
                         android:id="@+id/cv_songimage"
                         android:layout_centerHorizontal="true"
-                        android:background="@color/white"
+                        android:background="@color/bottomSheet"
                         android:layout_marginTop="@dimen/level3">
                         <ImageView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:src="@mipmap/default_image"
-                            android:background="@color/white"
+                            android:background="@color/bottomSheet"
                             android:id="@+id/iv_songimage"
                             android:scaleType="fitXY"/>
                     </androidx.cardview.widget.CardView>
@@ -206,7 +206,7 @@
                             android:layout_width="@dimen/iconWidthLevel1"
                             android:layout_height="@dimen/iconHeightLevel1"
                             android:src="@drawable/ic_skip_previous_black_24dp"
-                            android:background="@color/white"
+                            android:background="@color/bottomSheet"
                             android:scaleType="fitXY"
                             android:id="@+id/ibtn_previous"
                             android:layout_marginRight="@dimen/level3"
@@ -216,7 +216,7 @@
                             android:layout_width="@dimen/iconWidthLevel3"
                             android:layout_height="@dimen/iconHeightLevel3"
                             android:src="@drawable/ic_play_arrow_black_24dp"
-                            android:background="@color/white"
+                            android:background="@color/bottomSheet"
                             android:layout_toRightOf="@id/ibtn_previous"
                             android:scaleType="fitXY"
                             android:id="@+id/ibtn_play"
@@ -225,7 +225,7 @@
                             android:layout_width="@dimen/iconWidthLevel1"
                             android:layout_height="@dimen/iconHeightLevel1"
                             android:src="@drawable/ic_skip_next_black_24dp"
-                            android:background="@color/white"
+                            android:background="@color/bottomSheet"
                             android:layout_toRightOf="@id/ibtn_play"
                             android:scaleType="fitXY"
                             android:id="@+id/ibtn_next"
