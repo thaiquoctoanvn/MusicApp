@@ -139,7 +139,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/content/ic_delete_sweep_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/C:/Program%20Files/Android/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/file/ic_file_download_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -149,8 +149,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="a0a0a0" />
-                            <entry key="outputName" value="ic_delete_sweep_black_24dp" />
+                            <entry key="color" value="e91e63" />
+                            <entry key="outputName" value="ic_file_download_black_24dp" />
                             <entry key="sourceFile" value="C:\Users\ADMIN" />
                           </map>
                         </option>

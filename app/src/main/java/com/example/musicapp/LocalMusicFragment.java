@@ -3,13 +3,29 @@ package com.example.musicapp;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavAction;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+
+import com.example.musicapp.adapter.DownloadedSongAdapter;
+import com.example.musicapp.adapter.ItemClickListener;
+import com.example.musicapp.object.DownloadedSong;
+import com.example.musicapp.object.Song;
+import com.example.musicapp.viewmodel.VMMusicToMiniPlayer;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
+import io.realm.Sort;
 
 
 /**
@@ -17,7 +33,7 @@ import android.widget.ImageButton;
  * Use the {@link LocalMusicFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class LocalMusicFragment extends Fragment implements View.OnClickListener {
+public class LocalMusicFragment extends Fragment implements View.OnClickListener, ItemClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -29,6 +45,13 @@ public class LocalMusicFragment extends Fragment implements View.OnClickListener
 
     private ImageButton ibtnLocalMusicBack;
     private View view;
+    private RecyclerView rvDownloadedSong;
+    private DownloadedSongAdapter adapterDownloadedSong;
+
+    private Realm realm;
+    private List<Song> songList;
+    private RealmResults<DownloadedSong> realmResultsDownloadedSong;
+    private VMMusicToMiniPlayer vmMusicToMiniPlayer;
 
     public LocalMusicFragment() {
         // Required empty public constructor
@@ -66,14 +89,41 @@ public class LocalMusicFragment extends Fragment implements View.OnClickListener
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_local_music, container, false);
+        vmMusicToMiniPlayer = new ViewModelProvider(getActivity()).get(VMMusicToMiniPlayer.class);
         ConnectView();
+        DisplayDownloadedSong();
         return view;
     }
 
     private void ConnectView() {
-        ibtnLocalMusicBack = view.findViewById(R.id.ibtn_localmusicback);
+        Realm.init(getActivity());
+        realm = Realm.getDefaultInstance();
 
+        ibtnLocalMusicBack = view.findViewById(R.id.ibtn_localmusicback);
+        rvDownloadedSong = (RecyclerView) view.findViewById(R.id.rv_downloadsong);
         ibtnLocalMusicBack.setOnClickListener(LocalMusicFragment.this);
+    }
+
+    private void DisplayDownloadedSong() {
+        realmResultsDownloadedSong = realm.where(DownloadedSong.class).sort("songName", Sort.ASCENDING).findAll();
+        List<DownloadedSong> tempList = realm.copyFromRealm(realmResultsDownloadedSong);
+
+        songList = new ArrayList<>();
+        for(DownloadedSong item : tempList) {
+            Song song = new Song();
+            song.setIdSong(item.getId());
+            song.setSongName(item.getSongName());
+            song.setSongSingerName(item.getSinger());
+            song.setSongLink(item.getSongLinkLocal());
+            song.setSongImage(item.getSongImage());
+            song.setSongLikes("0");
+            songList.add(song);
+        }
+        adapterDownloadedSong = new DownloadedSongAdapter(songList);
+        rvDownloadedSong.setAdapter(adapterDownloadedSong);
+        rvDownloadedSong.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        adapterDownloadedSong.SetOnItemClickListener(LocalMusicFragment.this);
     }
 
     @Override
@@ -82,5 +132,14 @@ public class LocalMusicFragment extends Fragment implements View.OnClickListener
             case R.id.ibtn_localmusicback:
                 Navigation.findNavController(v).popBackStack();
         }
+    }
+
+    @Override
+    public void OnItemClickListener(View v, int position) {
+        ArrayList<Song> tempList = new ArrayList<>();
+        tempList.add(songList.get(position));
+        tempList.addAll(songList);
+        tempList.remove(position + 1);
+        vmMusicToMiniPlayer.getPlayingList().setValue(tempList);
     }
 }

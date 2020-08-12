@@ -149,7 +149,6 @@ public class SearchFragment extends Fragment implements TextWatcher, View.OnClic
         realmResults = realm.where(RecentKeySearch.class).limit(5).findAll();
         if(realmResults != null) {
             ArrayList<RecentKeySearch> arrayList = (ArrayList<RecentKeySearch>) realm.copyFromRealm(realmResults);
-            Log.e("###", arrayList.get(0).getKeys());
             recentKeySearchAdapter = new RecentKeySearchAdapter(arrayList);
             rvRecentSearch.setAdapter(recentKeySearchAdapter);
             rvRecentSearch.setLayoutManager(new LinearLayoutManager(getActivity()));

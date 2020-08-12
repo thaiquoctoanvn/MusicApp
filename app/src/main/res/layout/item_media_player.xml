@@ -120,8 +120,8 @@
                         android:layout_alignParentRight="true"
                         android:layout_alignParentTop="true"
                         android:layout_marginRight="@dimen/level2"
-                        android:id="@+id/ibtn_love"
-                        android:src="@drawable/ic_favorite_border_black_24dp"
+                        android:id="@+id/ibtn_download"
+                        android:src="@drawable/ic_file_download_black_24dp"
                         android:background="@color/bottomSheet"/>
                     <androidx.cardview.widget.CardView
                         android:layout_width="300dp"

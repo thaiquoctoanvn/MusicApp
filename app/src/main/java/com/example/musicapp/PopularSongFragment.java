@@ -123,6 +123,8 @@ public class PopularSongFragment extends Fragment implements PopularSongAdapter.
         });
         if(vmSaveHomeState.getPopularSong().getValue() != null) {
             UpdateUI(vmSaveHomeState.getPopularSong().getValue());
+            //Tránh trường hợp khi chuyển lại fragment list sẽ bị null
+            arrPopularSong = vmSaveHomeState.getPopularSong().getValue();
         } else {
             GetMostLikedSongData();
         }

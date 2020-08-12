@@ -13,8 +13,10 @@ import android.view.ViewGroup;
 
 import com.example.musicapp.adapter.ItemClickListener;
 import com.example.musicapp.adapter.ItemLibraryAdapter;
+import com.example.musicapp.object.DownloadedSong;
 import com.example.musicapp.object.ItemLibrary;
 import com.example.musicapp.object.PlayListLocal;
+import com.example.musicapp.object.SongLocal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +47,8 @@ public class LibraryFragment extends Fragment implements ItemClickListener {
     private RecyclerView rvLibraryItem;
 
     private Realm realm;
-    private RealmResults<PlayListLocal> realmResults;
+    private RealmResults<PlayListLocal> realmResultsPlaylist;
+    private RealmResults<DownloadedSong> realmResultsSong;
 
     public LibraryFragment() {
         // Required empty public constructor
@@ -99,11 +102,12 @@ public class LibraryFragment extends Fragment implements ItemClickListener {
         realm.executeTransaction(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                realmResults = realm.where(PlayListLocal.class).findAll();
+                realmResultsPlaylist = realm.where(PlayListLocal.class).findAll();
+                realmResultsSong = realm.where(DownloadedSong.class).findAll();
             }
         });
-        int playlistCounter = realmResults.size();
-        int localSongCounter = 0;
+        int playlistCounter = realmResultsPlaylist.size();
+        int localSongCounter = realmResultsSong.size();
 
         libraries = new ArrayList<>();
         ItemLibrary itemPlaylist = new ItemLibrary(

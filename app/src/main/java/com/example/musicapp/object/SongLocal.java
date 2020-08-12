@@ -5,11 +5,11 @@ import io.realm.annotations.PrimaryKey;
 
 public class SongLocal extends RealmObject {
     @PrimaryKey
-    String id;
-    String songName;
-    String singer;
-    String songImage;
-    String songLinkLocal;
+    private String id;
+    private String songName;
+    private String singer;
+    private String songImage;
+    private String songLinkLocal;
 
     public String getId() {
         return id;

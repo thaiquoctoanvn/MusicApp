@@ -22,14 +22,15 @@
             android:id="@+id/ibtn_localmusicback"
             android:scaleType="fitXY"/>
     </androidx.appcompat.widget.Toolbar>
-    <TextView
-        android:layout_width="wrap_content"
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Chưa có nhạc tải về"
-        style="@style/textSizeLevel2"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar_listsong"
+        android:padding="@dimen/level2"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        android:id="@+id/rv_downloadsong">
+
+    </androidx.recyclerview.widget.RecyclerView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

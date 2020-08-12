@@ -12,6 +12,7 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.DownloadManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -20,8 +21,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -37,7 +40,9 @@ import android.widget.Toast;
 
 import com.example.musicapp.adapter.PlayingListAdapter;
 import com.example.musicapp.object.Banner;
+import com.example.musicapp.object.DownloadedSong;
 import com.example.musicapp.object.Song;
+import com.example.musicapp.object.SongLocal;
 import com.example.musicapp.service.ClearFromRecentService;
 import com.example.musicapp.viewmodel.VMMusicToMiniPlayer;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -45,14 +50,18 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.Format;
 import java.util.ArrayList;
+
+import io.realm.Realm;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener, ActionForNotification{
 
     BottomNavigationView bottomNavigationView;
-    private ImageButton ibtnMiniPlayPause, ibtnMiniNext, ibtnLove, ibtnCollapse, ibtnPlayPause, ibtnNext, ibtnPrevious;
+    private ImageButton ibtnMiniPlayPause, ibtnMiniNext, ibtnDownload, ibtnCollapse, ibtnPlayPause, ibtnNext, ibtnPrevious;
     private ImageView ivMiniSongIcon, ivMainSongImage;
     private TextView tvMiniSongName, tvMiniSongSinger, tvMainSongName, tvMainSongSinger, tvStartedTime, tvFinishedTime;
     private RelativeLayout relativeLayoutMediaPlayer;
@@ -72,10 +81,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PlayMediaTask playMediaTask;
     private NotificationManager notificationManager;
     private BroadcastReceiver broadcastReceiver;
+    private BroadcastReceiver downloadBroadcastReceiver;
 
     private ArrayList<Song> playingList;
     private int i = 0;
     private Thread thread;
+    private long downloadId;
+    private DownloadedSong currentSong;
+    private Thread threadDownload;
+    private DownloadManager downloadManager;
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ReadyPlayMusic();
         OnListeningBroadcastReceiver();
+        registerReceiver(downloadBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CreateChannel();
@@ -105,6 +121,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void ConnectView() {
+
+        Realm.init(MainActivity.this);
+        realm = Realm.getDefaultInstance();
+
         ivMiniSongIcon = (ImageView) findViewById(R.id.iv_miniicon);
         tvMiniSongName = (TextView) findViewById(R.id.tv_minisongname);
         tvMiniSongSinger = (TextView) findViewById(R.id.tv_minisongsinger);
@@ -114,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvFinishedTime = (TextView) findViewById(R.id.tv_totaltime);
         sbSongLength = (SeekBar) findViewById(R.id.sb_songlength);
         ibtnPlayPause = (ImageButton) findViewById(R.id.ibtn_play);
-        ibtnLove = findViewById(R.id.ibtn_love);
+        ibtnDownload = findViewById(R.id.ibtn_download);
         ibtnCollapse = findViewById(R.id.ibtn_collapse);
         ibtnNext = findViewById(R.id.ibtn_next);
         ibtnPrevious = findViewById(R.id.ibtn_previous);
@@ -138,13 +158,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         relativeLayoutMediaPlayer.setOnClickListener(MainActivity.this);
         nestedScrollView.setOnClickListener(MainActivity.this);
-        ibtnLove.setOnClickListener(MainActivity.this);
+        ibtnDownload.setOnClickListener(MainActivity.this);
         ibtnCollapse.setOnClickListener(MainActivity.this);
         ibtnMiniPlayPause.setOnClickListener(MainActivity.this);
         ibtnPlayPause.setOnClickListener(MainActivity.this);
         ibtnMiniNext.setOnClickListener(MainActivity.this);
         ibtnNext.setOnClickListener(MainActivity.this);
         ibtnPrevious.setOnClickListener(MainActivity.this);
+
+        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
@@ -154,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
                     int height = displayMetrics.heightPixels;
                     ViewGroup.LayoutParams params = layoutMainPlayer.getLayoutParams();
-                    params.height = (height * 85 / 100) - 64;
+                    params.height = height;
                     layoutMainPlayer.setLayoutParams(params);
                 } else if(newState == BottomSheetBehavior.STATE_COLLAPSED) {
 //                    layoutMiniPlayer.setVisibility(View.VISIBLE);
@@ -206,6 +228,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 rvPlayingList.setAdapter(playingListAdapter);
                 rvPlayingList.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
+                currentSong = new DownloadedSong();
+                currentSong.setId(playingList.get(i).getIdSong());
+                currentSong.setSongName(playingList.get(i).getSongName());
+                currentSong.setSinger(playingList.get(i).getSongSingerName());
+                currentSong.setSongLinkLocal(playingList.get(i).getSongLink());
+                currentSong.setSongImage(playingList.get(i).getSongImage());
+
                 CreateNotification.createNotification(MainActivity.this, playingList.get(0), R.drawable.ic_pause_black_24dp, 0, playingList.size());
             }
         });
@@ -234,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if(mediaPlayer.isPlaying()) {
             mediaPlayer.reset();
         }
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             mediaPlayer.setDataSource(songLink);
             mediaPlayer.prepare();
@@ -306,6 +335,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         timerString = timerString + minutes + ":" + secsString;
         return  timerString;
     }
+
+    private void DownloadFile(final DownloadedSong songLocal) {
+        Log.e("###", "Downloading");
+        threadDownload = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                Uri uri = Uri.parse(songLocal.getSongLinkLocal());
+                DownloadManager.Request request = new DownloadManager.Request(uri);
+                request.setTitle("Tải xuống " + songLocal.getSongName());
+                request.setDescription("Hãy chờ một lúc...");
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+                String folderPath = Environment.getExternalStorageDirectory() + File.separator + "MusicApp";
+                String fileName = songLocal.getSongName() + System.currentTimeMillis();
+                File folder = new File(folderPath);
+                if(!folder.exists()) {
+                    folder.mkdir();
+                }
+
+                File file = new File(folderPath, fileName);
+                songLocal.setSongLinkLocal(folderPath + File.separator + fileName);
+                request.setDestinationUri(Uri.fromFile(file));
+
+                downloadId = downloadManager.enqueue(request);
+
+
+            }
+        });
+        threadDownload.start();
+        WriteSongToLocal(songLocal);
+    }
+
+    private void WriteSongToLocal(final DownloadedSong songLocal) {
+        realm.executeTransaction(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                realm.copyToRealm(songLocal);
+            }
+        });
+    }
+
     @Override
     public void onClick(View v) {
         switch(v.getId()) {
@@ -317,9 +388,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             }
-            case R.id.ibtn_love:
+            case R.id.ibtn_download:
                 if(playingList.size() > 0) {
-                    ibtnLove.setImageResource(R.drawable.ic_favorite_black_24dp);
+                    DownloadFile(currentSong);
                 }
                 break;
             case R.id.ibtn_collapse:
@@ -377,6 +448,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mp.reset();
                 UpdateMusicPlayer(playingList.get(i).getSongImage(), playingList.get(i).getSongName(), playingList.get(i).getSongSingerName());
                 PlayMedia(playingList.get(i).getSongLink());
+
+                currentSong = new DownloadedSong();
+                currentSong.setId(playingList.get(i).getIdSong());
+                currentSong.setSongName(playingList.get(i).getSongName());
+                currentSong.setSinger(playingList.get(i).getSongSingerName());
+                currentSong.setSongLinkLocal(playingList.get(i).getSongLink());
+                currentSong.setSongImage(playingList.get(i).getSongImage());
             } else {
                 mp.reset();
                 sbSongLength.setProgress(0);
@@ -443,6 +521,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         };
+        downloadBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, - 1);
+                if(downloadId == id) {
+                    Log.e("###", "Download completed");
+                    threadDownload.interrupt();
+                }
+            }
+        };
     }
 
     @Override
@@ -497,5 +585,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             notificationManager.cancelAll();
         }
         unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(downloadBroadcastReceiver);
     }
 }
