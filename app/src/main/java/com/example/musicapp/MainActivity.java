@@ -3,6 +3,7 @@ package com.example.musicapp;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.core.app.ActivityCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -12,6 +13,7 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.app.DownloadManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -19,6 +21,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -78,16 +81,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PlayingListAdapter playingListAdapter;
     private Handler handler = new Handler();
     private MediaPlayer mediaPlayer;
-    private PlayMediaTask playMediaTask;
     private NotificationManager notificationManager;
     private BroadcastReceiver broadcastReceiver;
     private BroadcastReceiver downloadBroadcastReceiver;
 
-    private ArrayList<Song> playingList;
-    private int i = 0;
-    private Thread thread;
+    private ArrayList<Song> playingList; //Danh sách các bài hát trong player
+    private int i = 0; //Thứ tự trong danh sách phát
     private long downloadId;
-    private DownloadedSong currentSong;
+    private DownloadedSong downloadedSong; //Bài hát chuẩn bị download
+    private final int REQUEST_CODE = 1010;
+
+    private Song currentSong; //Bài hát hiện đang phát
     private Thread threadDownload;
     private DownloadManager downloadManager;
     private Realm realm;
@@ -98,19 +102,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         SetUpNavigation();
         ConnectView();
-
         ReadyPlayMusic();
         OnListeningBroadcastReceiver();
         registerReceiver(downloadBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-
+        registerReceiver(broadcastReceiver, new IntentFilter("TRACKS"));
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CreateChannel();
-            registerReceiver(broadcastReceiver, new IntentFilter("TRACKS"));
             startService(new Intent(getBaseContext(), ClearFromRecentService.class));
         }
-
-
+        AskForPermission();
     }
+
     public void SetUpNavigation() {
         //Toolbar toolbar = findViewById(R.id.toolBar);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -166,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ibtnNext.setOnClickListener(MainActivity.this);
         ibtnPrevious.setOnClickListener(MainActivity.this);
 
-        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+
 
         bottomSheetBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
@@ -179,18 +181,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     params.height = height;
                     layoutMainPlayer.setLayoutParams(params);
                 } else if(newState == BottomSheetBehavior.STATE_COLLAPSED) {
-//                    layoutMiniPlayer.setVisibility(View.VISIBLE);
-//                    layoutMiniPlayer.animate().alpha(1.0f).setDuration(200);
+
                 }
             }
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-//                ivMiniSongIcon.setAlpha(1-slideOffset);
-//                tvMiniSongSinger.setAlpha(1-slideOffset);
-//                tvMiniSongName.setAlpha(1-slideOffset);
-//                ibtnMiniPlayPause.setAlpha(1-slideOffset);
-//                ibtnMiniNext.setAlpha(1-slideOffset);
                 layoutMiniPlayer.setAlpha(1-slideOffset);
                 layoutMainPlayer.setAlpha(slideOffset);
             }
@@ -228,17 +224,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 rvPlayingList.setAdapter(playingListAdapter);
                 rvPlayingList.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
-                currentSong = new DownloadedSong();
-                currentSong.setId(playingList.get(i).getIdSong());
-                currentSong.setSongName(playingList.get(i).getSongName());
-                currentSong.setSinger(playingList.get(i).getSongSingerName());
-                currentSong.setSongLinkLocal(playingList.get(i).getSongLink());
-                currentSong.setSongImage(playingList.get(i).getSongImage());
+                currentSong = playingList.get(i);
 
                 CreateNotification.createNotification(MainActivity.this, playingList.get(0), R.drawable.ic_pause_black_24dp, 0, playingList.size());
             }
         });
     }
+
+    private DownloadedSong GetSongForDownloading(Song song) {
+        DownloadedSong downloadedSong = new DownloadedSong();
+
+        downloadedSong.setId(String.valueOf(System.currentTimeMillis()));
+        downloadedSong.setSongName(song.getSongName());
+        downloadedSong.setSinger(song.getSongSingerName());
+        downloadedSong.setSongLinkLocal(song.getSongLink());
+        downloadedSong.setSongImage(song.getSongImage());
+
+        return downloadedSong;
+    }
+
     private void UpdateMusicPlayer(String songImage, String songName, String songSingerName) {
         tvMiniSongName.setText(songName);
         tvMiniSongSinger.setText(songSingerName);
@@ -336,27 +340,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return  timerString;
     }
 
-    private void DownloadFile(final DownloadedSong songLocal) {
+    private DownloadedSong DownloadFile(final Song source) {
         Log.e("###", "Downloading");
+        final DownloadedSong temp = GetSongForDownloading(source);
+        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         threadDownload = new Thread(new Runnable() {
             @Override
             public void run() {
 
-                Uri uri = Uri.parse(songLocal.getSongLinkLocal());
+                Uri uri = Uri.parse(temp.getSongLinkLocal());
                 DownloadManager.Request request = new DownloadManager.Request(uri);
-                request.setTitle("Tải xuống " + songLocal.getSongName());
+                request.setTitle("Tải xuống " + temp.getSongName());
                 request.setDescription("Hãy chờ một lúc...");
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
                 String folderPath = Environment.getExternalStorageDirectory() + File.separator + "MusicApp";
-                String fileName = songLocal.getSongName() + System.currentTimeMillis();
+                String fileName = temp.getSongName() + System.currentTimeMillis();
                 File folder = new File(folderPath);
                 if(!folder.exists()) {
                     folder.mkdir();
                 }
 
                 File file = new File(folderPath, fileName);
-                songLocal.setSongLinkLocal(folderPath + File.separator + fileName);
+                temp.setSongLinkLocal(folderPath + File.separator + fileName);
                 request.setDestinationUri(Uri.fromFile(file));
 
                 downloadId = downloadManager.enqueue(request);
@@ -365,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         threadDownload.start();
-        WriteSongToLocal(songLocal);
+        return temp;
     }
 
     private void WriteSongToLocal(final DownloadedSong songLocal) {
@@ -390,7 +396,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             case R.id.ibtn_download:
                 if(playingList.size() > 0) {
-                    DownloadFile(currentSong);
+                    downloadedSong = DownloadFile(currentSong);
                 }
                 break;
             case R.id.ibtn_collapse:
@@ -449,12 +455,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 UpdateMusicPlayer(playingList.get(i).getSongImage(), playingList.get(i).getSongName(), playingList.get(i).getSongSingerName());
                 PlayMedia(playingList.get(i).getSongLink());
 
-                currentSong = new DownloadedSong();
-                currentSong.setId(playingList.get(i).getIdSong());
-                currentSong.setSongName(playingList.get(i).getSongName());
-                currentSong.setSinger(playingList.get(i).getSongSingerName());
-                currentSong.setSongLinkLocal(playingList.get(i).getSongLink());
-                currentSong.setSongImage(playingList.get(i).getSongImage());
+                currentSong = playingList.get(i);
+
             } else {
                 mp.reset();
                 sbSongLength.setProgress(0);
@@ -524,9 +526,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         downloadBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                //Ngắt luồng tải khi đã tải xong
                 long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, - 1);
                 if(downloadId == id) {
                     Log.e("###", "Download completed");
+                    WriteSongToLocal(downloadedSong);
                     threadDownload.interrupt();
                 }
             }
@@ -586,5 +590,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         unregisterReceiver(broadcastReceiver);
         unregisterReceiver(downloadBroadcastReceiver);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode == REQUEST_CODE) {
+            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+            }
+        }
+    }
+
+    private void AskForPermission() {
+        ActivityCompat.requestPermissions(MainActivity.this, new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE);
     }
 }

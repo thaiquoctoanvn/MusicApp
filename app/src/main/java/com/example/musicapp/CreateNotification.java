@@ -31,70 +31,77 @@ public class CreateNotification {
 
     public static void createNotification(Context context, final Song song, int button, int position, int playListSize) {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
-            MediaSessionCompat mediaSessionCompat = new MediaSessionCompat(context, "tag");
+
+        }
+        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
+        MediaSessionCompat mediaSessionCompat = new MediaSessionCompat(context, "tag");
 
 //            new LoadBitmapForNotification().execute(song.getSongImage());
-            Thread bitmapThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        bitmap = Picasso.get().load(song.getSongImage()).get();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+        Thread bitmapThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    bitmap = Picasso.get().load(song.getSongImage()).get();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            });
-            bitmapThread.start();
-
-            //Hành động tua lùi
-            PendingIntent pendingIntentPrevious;
-            int drwPrevious;
-            if(position == 0) {
-                pendingIntentPrevious = null;
-                drwPrevious = 0;
-            } else {
-                Intent intentPrevious = new Intent(context, NotificationActionService.class).setAction(ACTION_PREVIOUS);
-                pendingIntentPrevious = PendingIntent.getBroadcast(context, 0, intentPrevious, PendingIntent.FLAG_UPDATE_CURRENT);
-                drwPrevious = R.drawable.ic_skip_previous_black_24dp;
-                bitmapThread.interrupt();
             }
+        });
+        bitmapThread.start();
 
-            //Hành động play/pause
-            Intent intentPlay = new Intent(context, NotificationActionService.class).setAction(ACTION_PLAY);
-            PendingIntent pendingIntentPlay = PendingIntent.getBroadcast(context, 0, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT);
+        //Hành động tua lùi
+        PendingIntent pendingIntentPrevious;
+        int drwPrevious;
+        if(position == 0) {
+            pendingIntentPrevious = null;
+            drwPrevious = 0;
+        } else {
+            Intent intentPrevious = new Intent(context, NotificationActionService.class);
+            intentPrevious.putExtra("control-media","control");
+            intentPrevious.setAction(ACTION_PREVIOUS);
+            pendingIntentPrevious = PendingIntent.getBroadcast(context, 0, intentPrevious, PendingIntent.FLAG_UPDATE_CURRENT);
+            drwPrevious = R.drawable.ic_skip_previous_black_24dp;
+            bitmapThread.interrupt();
+        }
 
-            //Hành động tua tới
-            PendingIntent pendingIntentNext;
-            int drwNext;
-            if(position == playListSize) {
-                pendingIntentNext = null;
-                drwNext = 0;
-            } else {
-                Intent intentNext = new Intent(context, NotificationActionService.class).setAction(ACTION_NEXT);
-                pendingIntentNext = PendingIntent.getBroadcast(context, 0, intentNext, PendingIntent.FLAG_UPDATE_CURRENT);
-                drwNext = R.drawable.ic_skip_next_black_24dp;
-                bitmapThread.interrupt();
-            }
+        //Hành động play/pause
+        Intent intentPlay = new Intent(context, NotificationActionService.class);
+        intentPlay.putExtra("control-media","control");
+        intentPlay.setAction(ACTION_PLAY);
+        PendingIntent pendingIntentPlay = PendingIntent.getBroadcast(context, 0, intentPlay, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            //create notification
-            notification = new NotificationCompat.Builder(context, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_library_music_black_24dp)
-                    .setContentTitle(song.getSongName())
-                    .setContentText(song.getSongSingerName())
-                    .setLargeIcon(bitmap)
-                    .setShowWhen(false)
-                    .addAction(drwPrevious, "Previous", pendingIntentPrevious)
-                    .addAction(button, "Play", pendingIntentPlay)
-                    .addAction(drwNext, "Next", pendingIntentNext)
-                    .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+        //Hành động tua tới
+        PendingIntent pendingIntentNext;
+        int drwNext;
+        if(position == playListSize) {
+            pendingIntentNext = null;
+            drwNext = 0;
+        } else {
+            Intent intentNext = new Intent(context, NotificationActionService.class);
+            intentNext.putExtra("control-media","control");
+            intentNext.setAction(ACTION_NEXT);
+            pendingIntentNext = PendingIntent.getBroadcast(context, 0, intentNext, PendingIntent.FLAG_UPDATE_CURRENT);
+            drwNext = R.drawable.ic_skip_next_black_24dp;
+            bitmapThread.interrupt();
+        }
+
+        //create notification
+        notification = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_library_music_black_24dp)
+                .setContentTitle(song.getSongName())
+                .setContentText(song.getSongSingerName())
+                .setLargeIcon(bitmap)
+                .setShowWhen(false)
+                .addAction(drwPrevious, "Previous", pendingIntentPrevious)
+                .addAction(button, "Play", pendingIntentPlay)
+                .addAction(drwNext, "Next", pendingIntentNext)
+                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mediaSessionCompat.getSessionToken()))
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
-                    .build();
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build();
 
-            notificationManagerCompat.notify(1, notification);
-            Log.e("###", "created notification");
-        }
+        notificationManagerCompat.notify(1, notification);
+        Log.e("###", "created notification");
     }
 }
