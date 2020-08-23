@@ -18,9 +18,11 @@ import android.app.DownloadManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -29,6 +31,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -47,6 +50,8 @@ import com.example.musicapp.object.DownloadedSong;
 import com.example.musicapp.object.Song;
 import com.example.musicapp.object.SongLocal;
 import com.example.musicapp.service.ClearFromRecentService;
+import com.example.musicapp.service.ControlMediaService;
+import com.example.musicapp.service.DownloadMediaService;
 import com.example.musicapp.viewmodel.VMMusicToMiniPlayer;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -61,7 +66,7 @@ import java.util.ArrayList;
 import io.realm.Realm;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnCompletionListener, SeekBar.OnSeekBarChangeListener, ActionForNotification{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, SeekBar.OnSeekBarChangeListener, ActionForNotification{
 
     BottomNavigationView bottomNavigationView;
     private ImageButton ibtnMiniPlayPause, ibtnMiniNext, ibtnDownload, ibtnCollapse, ibtnPlayPause, ibtnNext, ibtnPrevious;
@@ -79,11 +84,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private VMMusicToMiniPlayer vmMusicToMiniPlayer;
 
     private PlayingListAdapter playingListAdapter;
-    private Handler handler = new Handler();
-    private MediaPlayer mediaPlayer;
     private NotificationManager notificationManager;
     private BroadcastReceiver broadcastReceiver;
     private BroadcastReceiver downloadBroadcastReceiver;
+    private BroadcastReceiver mediaCompletedReceiver;
+    private BroadcastReceiver setUpDownloadReceiver;
+    private Intent downloadServiceIntent;
 
     private ArrayList<Song> playingList; //Danh sách các bài hát trong player
     private int i = 0; //Thứ tự trong danh sách phát
@@ -92,9 +98,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int REQUEST_CODE = 1010;
 
     private Song currentSong; //Bài hát hiện đang phát
-    private Thread threadDownload;
-    private DownloadManager downloadManager;
+
     private Realm realm;
+
+    private ControlMediaService controlMediaService;
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            ControlMediaService.ControlMediaBinder binder = (ControlMediaService.ControlMediaBinder) service;
+            controlMediaService = binder.GetInstance();
+            controlMediaService.SetMainActivityInstance(MainActivity.this);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.cancelAll();
+        }
+        unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(downloadBroadcastReceiver);
+        unregisterReceiver(mediaCompletedReceiver);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(serviceConnection);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(MainActivity.this, ControlMediaService.class);
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +150,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         OnListeningBroadcastReceiver();
         registerReceiver(downloadBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         registerReceiver(broadcastReceiver, new IntentFilter("TRACKS"));
+        registerReceiver(mediaCompletedReceiver, new IntentFilter("Media-completed"));
+        registerReceiver(setUpDownloadReceiver, new IntentFilter("Set-up-download-done"));
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CreateChannel();
             startService(new Intent(getBaseContext(), ClearFromRecentService.class));
@@ -116,8 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void SetUpNavigation() {
         //Toolbar toolbar = findViewById(R.id.toolBar);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        navHostFragment = (NavHostFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.nav_host_fragment);
+        navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
         //NavigationUI.setupWithNavController(toolbar, navHostFragment.getNavController());
         NavigationUI.setupWithNavController(bottomNavigationView, navHostFragment.getNavController());
     }
@@ -202,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onChanged(Banner banner) {
                 UpdateMusicPlayer(banner.getSongImage(), banner.getSongName(), banner.getSongSinger());
-                PlayMedia(banner.getSongLink());
+                PlayNewMedia(banner.getSongLink());
             }
         });
 
@@ -210,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onChanged(Song song) {
                 UpdateMusicPlayer(song.getSongImage(), song.getSongName(), song.getSongSingerName());
-                PlayMedia(song.getSongLink());
+                PlayNewMedia(song.getSongLink());
             }
         });
 
@@ -218,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onChanged(ArrayList<Song> songs) {
                 UpdateMusicPlayer(songs.get(0).getSongImage(), songs.get(0).getSongName(), songs.get(0).getSongSingerName());
-                PlayMedia(songs.get(0).getSongLink());
+                PlayNewMedia(songs.get(0).getSongLink());
                 playingList = songs;
                 playingListAdapter = new PlayingListAdapter(playingList);
                 rvPlayingList.setAdapter(playingListAdapter);
@@ -229,18 +274,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 CreateNotification.createNotification(MainActivity.this, playingList.get(0), R.drawable.ic_pause_black_24dp, 0, playingList.size());
             }
         });
-    }
-
-    private DownloadedSong GetSongForDownloading(Song song) {
-        DownloadedSong downloadedSong = new DownloadedSong();
-
-        downloadedSong.setId(String.valueOf(System.currentTimeMillis()));
-        downloadedSong.setSongName(song.getSongName());
-        downloadedSong.setSinger(song.getSongSingerName());
-        downloadedSong.setSongLinkLocal(song.getSongLink());
-        downloadedSong.setSongImage(song.getSongImage());
-
-        return downloadedSong;
     }
 
     private void UpdateMusicPlayer(String songImage, String songName, String songSingerName) {
@@ -261,62 +294,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tvMainSongSinger.setText(songSingerName);
     }
 
-    private void PlayMedia(final String songLink) {
-        if(mediaPlayer == null) {
-            mediaPlayer = new MediaPlayer();
-        } else if(mediaPlayer.isPlaying()) {
-            mediaPlayer.reset();
+    private void PlayNewMedia(final String songLink) {
+        if(i != 0) {
+            CreateNotification.createNotification(MainActivity.this, playingList.get(i), R.drawable.ic_pause_black_24dp, i, playingList.size());
         }
-//        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        try {
-            mediaPlayer.setDataSource(songLink);
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        tvFinishedTime.setText(MilliSecondToTime(mediaPlayer.getDuration()));
+        controlMediaService.SetUpMedia(songLink);
+        tvFinishedTime.setText(MilliSecondToTime(controlMediaService.GetMedia().getDuration()));
         ibtnPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
         ibtnMiniPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
-        sbSongLength.setMax(mediaPlayer.getDuration() / 1000);
-        SetUpSeekBar();
-
-        sbSongLength.setOnTouchListener(MainActivity.this);
+        sbSongLength.setMax(controlMediaService.GetMedia().getDuration() / 1000);
         sbSongLength.setOnSeekBarChangeListener(MainActivity.this);
-        mediaPlayer.setOnBufferingUpdateListener(MainActivity.this);
-        mediaPlayer.setOnCompletionListener(MainActivity.this);
     }
 
-    private void PauseMedia() {
-        if(mediaPlayer.isPlaying()) {
-            handler.removeCallbacks(UpdateCurrentTime);
-            mediaPlayer.pause();
+    private void PlayOrPauseMedia() {
+        if(controlMediaService.IsMediaPlaying()) {
+            controlMediaService.PauseMedia();
             ibtnPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
             ibtnMiniPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+
         } else {
-            mediaPlayer.start();
             ibtnPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
             ibtnMiniPlayPause.setImageResource(R.drawable.ic_pause_black_24dp);
-            SetUpSeekBar();
+            controlMediaService.PlayMedia();
+
         }
     }
 
-    private Runnable UpdateCurrentTime = new Runnable() {
-        @Override
-        public void run() {
+    private void MediaOutOfList() {
+        controlMediaService.ReleaseMedia();
+        sbSongLength.setProgress(0);
+        ibtnPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+        ibtnMiniPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
+        tvStartedTime.setText("0:00");
+        tvFinishedTime.setText("0:00");
+        i = 0;
+    }
 
-           long currentDuration = mediaPlayer.getCurrentPosition();
-           sbSongLength.setProgress((int) currentDuration / 1000);//Đổi millisec về sec /1000
-           tvStartedTime.setText(MilliSecondToTime(currentDuration));
-           handler.postDelayed(UpdateCurrentTime, 1000);
+    //Gọi từ controlMediaService
+    public void DisplayTimeLine(long currentDuration) {
+        sbSongLength.setProgress((int) currentDuration / 1000);//Đổi millisec về sec /1000
+        tvStartedTime.setText(MilliSecondToTime(currentDuration));
+    }
+
+    //Gọi từ controlMediaService
+    public void SetSeekBarBuffer(int percent) {
+        sbSongLength.setSecondaryProgress(percent);
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if(controlMediaService.IsMediaNotNull() && fromUser) {
+            long milliseconds = progress * 1000;
+            controlMediaService.GetMedia().seekTo((int) milliseconds);//nhân lại 1000 để trả về dạng millisecond cho mediaplayer
+            tvStartedTime.setText(MilliSecondToTime(milliseconds));
         }
-    };
+    }
 
-    private void SetUpSeekBar() {
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
 
-        if(mediaPlayer.isPlaying()) {
-            handler.postDelayed(UpdateCurrentTime, 1000);
-        }
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
     }
 
     private String MilliSecondToTime(long durationInMillis) {
@@ -330,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        if(hours > 0) {
 //            timerString = hours + ":";
 //        }
-        Log.e("Secs", String.valueOf(seconds));
+//        Log.e("Secs", String.valueOf(seconds));
         if(seconds < 10) {
             secsString = "0" + seconds;
         } else  {
@@ -340,40 +381,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return  timerString;
     }
 
-    private DownloadedSong DownloadFile(final Song source) {
-        Log.e("###", "Downloading");
-        final DownloadedSong temp = GetSongForDownloading(source);
-        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        threadDownload = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                Uri uri = Uri.parse(temp.getSongLinkLocal());
-                DownloadManager.Request request = new DownloadManager.Request(uri);
-                request.setTitle("Tải xuống " + temp.getSongName());
-                request.setDescription("Hãy chờ một lúc...");
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
-                String folderPath = Environment.getExternalStorageDirectory() + File.separator + "MusicApp";
-                String fileName = temp.getSongName() + System.currentTimeMillis();
-                File folder = new File(folderPath);
-                if(!folder.exists()) {
-                    folder.mkdir();
-                }
-
-                File file = new File(folderPath, fileName);
-                temp.setSongLinkLocal(folderPath + File.separator + fileName);
-                request.setDestinationUri(Uri.fromFile(file));
-
-                downloadId = downloadManager.enqueue(request);
-
-
-            }
-        });
-        threadDownload.start();
-        return temp;
-    }
-
     private void WriteSongToLocal(final DownloadedSong songLocal) {
         realm.executeTransaction(new Realm.Transaction() {
             @Override
@@ -381,6 +388,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 realm.copyToRealm(songLocal);
             }
         });
+    }
+
+    private void DownloadSong(Song song) {
+        downloadServiceIntent = new Intent(MainActivity.this, DownloadMediaService.class);
+
+        downloadServiceIntent.putExtra("Song-name", song.getSongName());
+        downloadServiceIntent.putExtra("Song-singer", song.getSongSingerName());
+        downloadServiceIntent.putExtra("Song-link-online", song.getSongLink());
+        downloadServiceIntent.putExtra("Song-image", song.getSongImage());
+        startService(downloadServiceIntent);
     }
 
     @Override
@@ -395,8 +412,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
             case R.id.ibtn_download:
-                if(playingList.size() > 0) {
-                    downloadedSong = DownloadFile(currentSong);
+                if(currentSong != null) {
+                    DownloadSong(currentSong);
                 }
                 break;
             case R.id.ibtn_collapse:
@@ -404,12 +421,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.ibtn_miniplaypause:
                 if(playingList.size() > 0) {
-                    PauseMedia();
+                    OnTrackPlay();
                 }
                 break;
             case R.id.ibtn_play:
                 if(playingList.size() > 0) {
-                    PauseMedia();
+                    OnTrackPlay();
                 }
                 break;
             case R.id.ibtn_mininext:
@@ -430,64 +447,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-//        int playPosition = (int) (mediaPlayer.getDuration() / 100) * ((SeekBar) v).getProgress();
-//        mediaPlayer.seekTo(playPosition);
-//        tvStartedTime.setText(MilliSecondToTime(playPosition));
-        return false;
-    }
-
-
-    @Override
-    public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        sbSongLength.setSecondaryProgress(percent);
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-
-        //Kiểm tra nếu list còn nhạc thì tăng thứ tự lên bài kế tiếp
-        if(playingList != null) {
-            i++;
-            if(i < playingList.size()) {
-                mp.reset();
-                UpdateMusicPlayer(playingList.get(i).getSongImage(), playingList.get(i).getSongName(), playingList.get(i).getSongSingerName());
-                PlayMedia(playingList.get(i).getSongLink());
-
-                currentSong = playingList.get(i);
-
-            } else {
-                mp.reset();
-                sbSongLength.setProgress(0);
-                ibtnPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
-                ibtnMiniPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
-                tvStartedTime.setText("0:00");
-                tvFinishedTime.setText("0:00");
-                i = 0;
-            }
-        }
-    }
-
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if(mediaPlayer != null && fromUser) {
-            long milliseconds = progress * 1000;
-            mediaPlayer.seekTo((int) milliseconds);//nhân lại 1000 để trả về dạng millisecond cho mediaplayer
-            tvStartedTime.setText(MilliSecondToTime(milliseconds));
-        }
-    }
-
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
-    }
-
     private void CreateChannel() {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel notificationChannel = new NotificationChannel(
@@ -502,6 +461,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void OnListeningBroadcastReceiver() {
+
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -511,7 +471,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         OnTrackPrevious();
                         break;
                     case CreateNotification.ACTION_PLAY:
-                        if(mediaPlayer.isPlaying()) {
+                        if(controlMediaService.IsMediaPlaying()) {
                             OnTrackPause();
                         } else {
                             OnTrackPlay();
@@ -531,8 +491,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if(downloadId == id) {
                     Log.e("###", "Download completed");
                     WriteSongToLocal(downloadedSong);
-                    threadDownload.interrupt();
+                    stopService(downloadServiceIntent);
                 }
+            }
+        };
+        mediaCompletedReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(playingList != null) {
+                    i++;
+                    if(i < playingList.size()) {
+                        UpdateMusicPlayer(playingList.get(i).getSongImage(), playingList.get(i).getSongName(), playingList.get(i).getSongSingerName());
+                        PlayNewMedia(playingList.get(i).getSongLink());
+
+                        currentSong = playingList.get(i);
+
+                    } else {
+                        MediaOutOfList();
+                    }
+                }
+            }
+        };
+        setUpDownloadReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                downloadId = intent.getExtras().getLong("Id-download");
+                Log.e("Id-download", String.valueOf(downloadId));
+                downloadedSong = new DownloadedSong();
+                downloadedSong.setId(String.valueOf(System.currentTimeMillis()));
+                downloadedSong.setSongName(intent.getExtras().getString("Song-name"));
+                downloadedSong.setSinger(intent.getExtras().getString("Song-singer"));
+                downloadedSong.setSongLinkLocal(intent.getExtras().getString("Song-link-local"));
+                downloadedSong.setSongImage(intent.getExtras().getString("Song-image"));
             }
         };
     }
@@ -543,22 +533,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(i < 0) {
             i = 0;
         }
-        mediaPlayer.reset();
         UpdateMusicPlayer(playingList.get(i).getSongImage(), playingList.get(i).getSongName(), playingList.get(i).getSongSingerName());
-        PlayMedia(playingList.get(i).getSongLink());
+        PlayNewMedia(playingList.get(i).getSongLink());
         CreateNotification.createNotification(MainActivity.this, playingList.get(i), R.drawable.ic_pause_black_24dp, i, playingList.size());
     }
 
     @Override
     public void OnTrackPlay() {
-        PauseMedia();
+        PlayOrPauseMedia();
         CreateNotification.createNotification(MainActivity.this, playingList.get(i), R.drawable.ic_pause_black_24dp, i, playingList.size());
-
     }
 
     @Override
     public void OnTrackPause() {
-        PauseMedia();
+        PlayOrPauseMedia();
         CreateNotification.createNotification(MainActivity.this, playingList.get(i), R.drawable.ic_play_arrow_black_24dp, i, playingList.size());
 
     }
@@ -567,29 +555,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void OnTrackNext() {
         i++;
         if(i >= playingList.size()) {
-            mediaPlayer.reset();
-            sbSongLength.setProgress(0);
-            ibtnPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
-            ibtnMiniPlayPause.setImageResource(R.drawable.ic_play_arrow_black_24dp);
-            tvStartedTime.setText("0:00");
-            tvFinishedTime.setText("0:00");
-            i = 0;
+            MediaOutOfList();
         } else {
-            mediaPlayer.reset();
             UpdateMusicPlayer(playingList.get(i).getSongImage(), playingList.get(i).getSongName(), playingList.get(i).getSongSingerName());
-            PlayMedia(playingList.get(i).getSongLink());
+            PlayNewMedia(playingList.get(i).getSongLink());
             CreateNotification.createNotification(MainActivity.this, playingList.get(i), R.drawable.ic_pause_black_24dp, i, playingList.size());
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.cancelAll();
-        }
-        unregisterReceiver(broadcastReceiver);
-        unregisterReceiver(downloadBroadcastReceiver);
     }
 
     @Override

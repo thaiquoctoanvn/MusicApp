@@ -24,7 +24,9 @@
             </intent-filter>
         </activity>
         <receiver android:name=".service.NotificationActionService"/>
+
         <service android:name=".service.ClearFromRecentService"/>
+        <service android:name=".service.ControlMediaService"/>
     </application>
 
 </manifest>
