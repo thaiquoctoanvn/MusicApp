@@ -32,8 +32,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.transition.Slide;
+import android.transition.Transition;
+import android.transition.TransitionManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private long downloadId;
     private DownloadedSong downloadedSong; //Bài hát chuẩn bị download
     private final int REQUEST_CODE = 1010;
+    private final double slideMark = 0.5;
 
     private Song currentSong; //Bài hát hiện đang phát
 
@@ -234,6 +239,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                 layoutMiniPlayer.setAlpha(1-slideOffset);
                 layoutMainPlayer.setAlpha(slideOffset);
+                if(slideOffset > slideMark) {
+                    Transition transition = new Slide(Gravity.BOTTOM);
+                    transition.setDuration(400);
+                    TransitionManager.beginDelayedTransition(bottomNavigationView, transition);
+                    bottomNavigationView.setVisibility(View.GONE);
+                } else {
+                    Transition transition = new Slide(Gravity.BOTTOM);
+                    transition.setDuration(400);
+                    TransitionManager.beginDelayedTransition(bottomNavigationView, transition);
+                    bottomNavigationView.setVisibility(View.VISIBLE);
+                }
+
             }
         });
 
@@ -420,27 +437,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 break;
             case R.id.ibtn_miniplaypause:
-                if(playingList.size() > 0) {
-                    OnTrackPlay();
-                }
-                break;
             case R.id.ibtn_play:
                 if(playingList.size() > 0) {
                     OnTrackPlay();
                 }
                 break;
             case R.id.ibtn_mininext:
-                if(playingList.size() > 0) {
-                    OnTrackNext();
-                }
-                break;
             case R.id.ibtn_next:
-                if(playingList.size() > 0) {
+                if(playingList.size() > 0 && i < playingList.size()) {
                     OnTrackNext();
                 }
                 break;
             case R.id.ibtn_previous:
-                if(playingList.size() > 0) {
+                if(playingList.size() > 0 && i > 0) {
                     OnTrackPrevious();
                 }
                 break;
